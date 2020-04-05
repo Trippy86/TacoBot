@@ -1,0 +1,7 @@
+.gitignore
+*.session
+*.sqlite
+venv/*
+*.md
+__pycache__/
+.idea/
