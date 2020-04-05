@@ -1,7 +1,7 @@
 from decouple import config
 
 
-default_taco_amount = config('DEFAULT_TACOS', default=50, cast=int)
+default_taco_amount = config('DEFAULT_TACOS', default=25, cast=int)
 
 taco_emoji = '\U0001F32E'
 
@@ -39,7 +39,7 @@ self_tacoing_phrase = '<b>Why would you want to send these delicious tacos to yo
 balance_low_phrase = '<b>Whoops... You don\'t have enough tacos!</b>\n<code>You can probably start some crowdfunding' \
                      ' page to get some tacos from your friends and other participants \U0001F643</code>'
 
-balance_phrase = '<b>You have</b> <code>{}</code> <b>tacos on your taco-balance.</b>\n<code>{}</code>'
+balance_phrase = '{}<b> has</b> <code>{}</code> <b>tacos on their taco-balance.</b>\n<code>{}</code>' #TODO
 
 balance_comment_low = 'Where did all your tacos go?!! \U0001F47F\U0001F47F\U0001F47F'
 
@@ -47,7 +47,7 @@ balance_comment_medium = 'I guess, you dont gift much of your tacos... and so do
 
 balance_comment_high = 'WoW, I\'m impressed! How did you earn so many tacos? Are you trading crypto or what?\U0001F640'
 
-taco_transfer_phrase = '<b>Gave</b> <code>{}</code> <b>tacos to</b> {}<b>!</b>\n<code>{}</code>'
+taco_transfer_phrase = '<a href="{}">{}</a> <b>gave</b> <code>{}</code> <b>tacos to</b> <a href="{}">{}</a><b>!</b>\n<code>{}</code>'
 
 taco_transfer_comment_low = 'Why didn\'t you share more tacos tho?\U0001F634'
 
@@ -65,4 +65,12 @@ only_one_receiver_phrase = '<b>Sorry, but there can be only one taco-receiver.</
 
 user_not_present_phrase = '<b>Am I a joke to you?</b>\n<code>This person is not a member of this chat (if this is a' \
                           ' real person in first place)!</code>\U0001F927'
+
+delete_message_fail_phrase = 'Only initiator or admins can delete this message.'
+
+admins_only_phrase = '<b>Sorry, but only admins can use this command :(</b>'
+
+silenced_mode_on_phrase = '<b>Silenced mode has been turned ON.</b>'
+
+silenced_mode_off_phrase = '<b>Silenced mode has been turned OFF.</b>'
 
