@@ -2,25 +2,33 @@
 
 This is a port of HeyTaco Bot (Slack) for Telegram.
 
+
+## Prerequisites
+
+In order to run this bot you need to create `.env`-file inside of project folder. This file must contains such data as  
+- `[BOT_TOKEN]`
+- `[API_ID]`
+- `[API_HASH]`
+- `[BOT_USERNAME]`  
+  
+You can obtain `[BOT_TOKEN]` by contacting [@BotFather](https://t.me/botfather) and `[API_ID]/[API_HASH]` on [Telegram\'s website](https://my.telegram.org/). 
+`BOT_USERNAME` must be bot's username with all upper- and lowercase letters in it,  without @sign in the beginning.  
+  
+`Example of .env file:`  
+BOT_TOKEN=000:AaaAA-BbbBbBb\
+API_ID=12345  
+API_HASH=a1b2c3e  
+BOT_USERNAME=HeyTacoBot
+
 ## Installation
 
-This project requires a [Heroku](https://www.heroku.com/) -ish environment. You can also self-host using [Dokku](http://dokku.viewdocs.io/dokku/). 
-You can obtain `[BOT_TOKEN]` and `[API_ID]/[API_HASH]` for your instance by contacting [@BotFather](https://t.me/botfather) and on [Telegram\'s website](https://my.telegram.org/)
-
-Assuming Dokku, SSH into your _VPS with DOKKU installed_ on it and:
-1. `dokku apps:create [APP-NAME]`
-2. `dokku config:set --no-restart [APP-NAME] BOT_TOKEN=[YOUR-BOT-TOKEN]`
-3. `dokku config:set --no-restart [APP-NAME] API_ID=[YOUR-API_ID]`
-4. `dokku config:set --no-restart [APP-NAME] API_HASH=[YOUR-API_HASH]`
-5. `dokku postgres:create [DB-NAME]` (requires [postgres plugin](https://github.com/dokku/dokku-postgres))
-6. `doku postgres:link [DB-NAME] [APP-NAME]`
+This Project supports [Docker](https://www.docker.com/) containers. 
 
 
-From _local machine_:</br>
-7. `git init`</br>
-8. `git clone git@github.com:l0rem/TacoBot.git`</br>
-9. `git remote add dokku dokku@dokku.me:[APP-NAME]`</br>
-10. `git push dokku master`
+Assuming Docker, clone repo and create `.env` file inside of it. Then:
+1. `docker build -t taco_bot .`
+2. `docker run -d taco_bot`
+
 
 ## Usage
 
@@ -39,5 +47,5 @@ Add it to your group and give it admin rights, so that it will be able to access
 ## Credits
 
 python-telegram-bot 
-DOKKU 
+Docker 
 HeyTacoBot
