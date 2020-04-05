@@ -16,7 +16,7 @@ def my_tacos_callback(bot, message):
     cid = get_cid(message)
     chat = Chats.get(Chats.cid == message.chat.id)
 
-    clean_chat(chat.mids, chat.cid, message, bot)
+    clean_chat(chat.mids, chat.cid, bot, message)
 
     user_name = store_name(message.from_user)
 
@@ -72,7 +72,7 @@ def taco_top_callback(bot, message):
     store_name(message.from_user)
 
     chat = Chats.get(Chats.cid == message.chat.id)
-    clean_chat(chat.mids, chat.cid, message, bot)
+    clean_chat(chat.mids, chat.cid, bot, message)
 
     ok_button = InlineKeyboardButton('OK', callback_data='delete:{}'.format(message.from_user.id))
     ok_keyboard = InlineKeyboardMarkup([[ok_button]])

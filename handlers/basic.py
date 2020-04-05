@@ -44,7 +44,7 @@ store_names_handler = MessageHandler(callback=store_names_callback)
 
 def less_callback(bot, message):
     chat = Chats.get(Chats.cid == message.chat.id)
-    clean_chat(chat.mids, chat.cid, message, bot)
+    clean_chat(chat.mids, chat.cid, bot, message)
 
     user = bot.get_chat_member(chat_id=message.chat.id,
                                user_id=message.from_user.id)
