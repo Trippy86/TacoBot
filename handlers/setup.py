@@ -9,7 +9,7 @@ def new_chat_callback(bot, message):
     """ triggers when bot gets added to new chat """
 
     cid = get_cid(message)
-    store_name(message)
+    store_name(message.from_user)
 
     invited_by = message.from_user
 
@@ -17,7 +17,7 @@ def new_chat_callback(bot, message):
                  invited_by=invited_by.id)
 
     Tacos.create(chat=cid)
-
+                                                        # TODO
     bot.send_message(cid,
                      chat_enabled_phrase,
                      parse_mode='html')
