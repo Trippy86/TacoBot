@@ -6,7 +6,7 @@ from phrases import balance_phrase, balance_comment_medium, balance_comment_high
 from chattools import get_uid, store_name, get_cid, resolve_name, get_mid, clean_chat, ensure_no_at_sign
 
 
-default_taco_amount = config('DEFAULT_TACOS', default=50, cast=int)
+default_taco_amount = config('DEFAULT_TACOS', default=25, cast=int)
 bot_username = ensure_no_at_sign(config('BOT_USERNAME', default='HeyTacoBot'))    #TODO
 
 
