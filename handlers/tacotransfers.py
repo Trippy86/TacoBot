@@ -151,7 +151,7 @@ def chat_reply_callback(bot, message):
     store_name(receiver := message.reply_to_message.from_user)
 
     chat = Chats.get(Chats.cid == message.chat.id)
-    clean_chat(chat.mids, chat.cid, message, bot) #TODO
+    clean_chat(chat.mids, chat.cid, None, bot)                  #TODO
 
     give_tacos(bot, message, sender, receiver)
 
@@ -168,7 +168,7 @@ def taco_mention_callback(bot, message):
     store_name(message.from_user)
 
     chat = Chats.get(Chats.cid == message.chat.id)
-    clean_chat(chat.mids, chat.cid, message, bot) #TODO
+    clean_chat(chat.mids, chat.cid, None, bot)              #TODO
 
     ok_button = InlineKeyboardButton('OK', callback_data='delete:{}'.format(message.from_user.id))
     ok_keyboard = InlineKeyboardMarkup([[ok_button]])

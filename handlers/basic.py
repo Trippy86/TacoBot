@@ -35,7 +35,8 @@ help_handler = MessageHandler(callback=help_callback,
 
 def store_names_callback(bot, message):
     """ stores names for each user, if not already present in DB"""
-    store_name(message.from_user)
+    if message.from_user is not None:
+        store_name(message.from_user)
 
 
 store_names_handler = MessageHandler(callback=store_names_callback)
