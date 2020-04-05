@@ -1,5 +1,6 @@
 from pyrogram import MessageHandler, Filters
-from phrases import start_phrase, help_phrase
+from phrases import start_phrase, help_phrase, delete_message_fail_phrase, admins_only_phrase,\
+    silenced_mode_off_phrase, silenced_mode_on_phrase
 from dbmodels import Chats
 from pyrogram import CallbackQueryHandler
 from chattools import get_uid, store_name, clean_chat
@@ -34,7 +35,7 @@ help_handler = MessageHandler(callback=help_callback,
 
 def store_names_callback(bot, message):
     """ stores names for each user, if not already present in DB"""
-    store_name(message)
+    store_name(message.from_user)
 
 
 store_names_handler = MessageHandler(callback=store_names_callback)
@@ -44,23 +45,28 @@ def less_callback(bot, message):
     chat = Chats.get(Chats.cid == message.chat.id)
     clean_chat(chat.mids, chat.cid, message, bot)
 
-    if message.from_user.id == chat.invited_by:
+    user = bot.get_chat_member(chat_id=message.chat.id,
+                               user_id=message.from_user.id)
+
+    if message.from_user.id == chat.invited_by or\
+            user.status == 'administrator' or\
+            user.status == 'creator':                   #TODO
         if chat.less is False:
-            text = '<b>Silenced mode has been turned ON.</b>'
+            text = silenced_mode_on_phrase
             chat.less = True
         else:
             chat.less = False
-            text = '<b>Silenced mode has been turned OFF.</b>'
+            text = silenced_mode_off_phrase
         mid = bot.send_message(chat_id=chat.cid,
-                         text=text,
-                         parse_mode='html').message_id
+                               text=text,
+                               parse_mode='html').message_id
         chat.mids = json.dumps([mid])
         chat.save()
     else:
-        text = '<b>Sorry, but only user that invited me can use this command :(</b>'
+        text = admins_only_phrase
         mid = bot.send_message(chat_id=chat.cid,
-                         text=text,
-                         parse_mode='html').message_id
+                               text=text,
+                               parse_mode='html').message_id
         chat.mids = json.dumps([mid])
         chat.save()
     pass
@@ -72,7 +78,12 @@ less_handler = MessageHandler(callback=less_callback,
 
 def delete_callback(bot, callbackquery):
     data = callbackquery.data
-    if int(data.split(':')[1]) == callbackquery.from_user.id:
+    user = bot.get_chat_member(chat_id=callbackquery.message.chat.id,
+                               user_id=callbackquery.from_user.id)
+
+    if int(data.split(':')[1]) == callbackquery.from_user.id or\
+            user.status == 'administrator' or\
+            user.status == 'creator':               #TODO
         try:
             bot.delete_messages(chat_id=callbackquery.message.chat.id,
                                 message_ids=callbackquery.message.message_id)
@@ -81,7 +92,7 @@ def delete_callback(bot, callbackquery):
             pass
     else:
         bot.answer_callback_query(callback_query_id=callbackquery.id,
-                                  text='Only initiator can delete this message.')
+                                  text=delete_message_fail_phrase)
 
 
 delete_handler = CallbackQueryHandler(filters=Filters.callback_data,
