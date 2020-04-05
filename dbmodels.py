@@ -1,5 +1,6 @@
 from peewee import *
 from playhouse.db_url import connect
+from playhouse.sqlite_ext import *
 from decouple import config
 
 
@@ -12,7 +13,8 @@ class Chats(Model):                                                        # cha
     cid = BigIntegerField()
     invited_by = BigIntegerField()
     less = BooleanField(default=False)
-    mids = TextField(default='[]')
+    mids = JSONField(null=True,
+                     default=[])                                             #TODO
 
     class Meta:
         database = db
@@ -24,8 +26,8 @@ if not Chats.table_exists():                                                    
 
 class Tacos(Model):                                                 # taco-model stores balances and chat-related things
     chat = BigIntegerField()
-    taco_balance = TextField(null=True,
-                             default='{}')
+    taco_balance = JSONField(null=True,
+                             default={})
 
     class Meta:
         database = db
@@ -38,7 +40,7 @@ if not Tacos.table_exists():                                                    
 class Usernames(Model):                                                       # username-model is here only for /tacotop
     uid = BigIntegerField()
     name = CharField()
-    username = CharField()
+    username = CharField(null=True)
 
     class Meta:
         database = db
