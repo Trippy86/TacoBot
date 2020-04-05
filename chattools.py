@@ -1,5 +1,4 @@
 from dbmodels import Usernames
-import json
 
 
 def get_uid(message):
@@ -17,14 +16,15 @@ def get_mid(message):
     return message.message_id
 
 
-def store_name(message):
+def store_name(user_data):
     """ this function is here only for /tacotop """
 
-    uid = get_uid(message)
-    user_data = message.from_user
+    uid = user_data.id
+
+    user = Usernames.select().where(Usernames.uid == uid)
 
     if user_data.username is None:
-        username = None
+        username = None               #TODO
         first_name = user_data.first_name
         last_name = user_data.last_name
         if last_name is None:
@@ -34,8 +34,6 @@ def store_name(message):
     else:
         name = '@' + user_data.username
         username = user_data.username.lower()
-
-    user = Usernames.select().where(Usernames.uid == uid)
 
     if user.exists():
         user = user.get()
@@ -73,7 +71,6 @@ def ensure_no_at_sign(name: str):
 
 
 def clean_chat(mids, cid, message, bot):
-    mids = json.loads(mids)
     mids.append(message.message_id)
     try:
         bot.delete_messages(chat_id=cid,
