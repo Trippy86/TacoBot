@@ -7,4 +7,5 @@ venv/
 *.db-journal
 .env
 *.session
+*.session-journal
 

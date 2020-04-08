@@ -24,7 +24,7 @@ def store_name(user_data):
     user = Usernames.select().where(Usernames.uid == uid)
 
     if user_data.username is None:
-        username = None               #TODO
+        username = None
         first_name = user_data.first_name
         last_name = user_data.last_name
         if last_name is None:
@@ -72,7 +72,10 @@ def ensure_no_at_sign(name: str):
 
 def clean_chat(mids, cid, bot, message=None):
     if message is not None:
-        mids.append(message.message_id)
+        try:
+            mids.append(message.message_id)
+        except AttributeError:
+            mids = []
     try:
         bot.delete_messages(chat_id=cid,
                             message_ids=mids)

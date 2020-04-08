@@ -1,6 +1,6 @@
 from pyrogram import MessageHandler, Filters
 from phrases import start_phrase, help_phrase, delete_message_fail_phrase, admins_only_phrase,\
-    silenced_mode_off_phrase, silenced_mode_on_phrase
+    silenced_mode_off_phrase, silenced_mode_on_phrase, autohide_on_phrase, autohide_off_phrase
 from dbmodels import Chats
 from pyrogram import CallbackQueryHandler
 from chattools import get_uid, store_name, clean_chat
@@ -51,7 +51,7 @@ def less_callback(bot, message):
 
     if message.from_user.id == chat.invited_by or\
             user.status == 'administrator' or\
-            user.status == 'creator':                   #TODO
+            user.status == 'creator':
         if chat.less is False:
             text = silenced_mode_on_phrase
             chat.less = True
@@ -77,6 +77,48 @@ less_handler = MessageHandler(callback=less_callback,
                               filters=Filters.command('tacosilence') & Filters.group)
 
 
+def autohide_callback(bot, message):
+    chat = Chats.get(Chats.cid == message.chat.id)
+    clean_chat(chat.mids, chat.cid, bot, message)
+
+    user = bot.get_chat_member(chat_id=message.chat.id,
+                               user_id=message.from_user.id)
+
+    if message.from_user.id == chat.invited_by or\
+            user.status == 'administrator' or\
+            user.status == 'creator':
+
+        if chat.autohide is False:
+            text = autohide_on_phrase
+            chat.autohide = True
+
+        else:
+            chat.autohide = False
+            text = autohide_off_phrase
+
+        mid = bot.send_message(chat_id=chat.cid,
+                               text=text,
+                               parse_mode='html').message_id
+
+        chat.mids = json.dumps([mid])
+        chat.save()
+
+    else:
+        text = admins_only_phrase
+
+        mid = bot.send_message(chat_id=chat.cid,
+                               text=text,
+                               parse_mode='html').message_id
+
+        chat.mids = json.dumps([mid])
+        chat.save()
+    pass
+
+
+autohide_handler = MessageHandler(callback=autohide_callback,
+                                  filters=Filters.command('autohide') & Filters.group)
+
+
 def delete_callback(bot, callbackquery):
     data = callbackquery.data
     user = bot.get_chat_member(chat_id=callbackquery.message.chat.id,
@@ -84,7 +126,7 @@ def delete_callback(bot, callbackquery):
 
     if int(data.split(':')[1]) == callbackquery.from_user.id or\
             user.status == 'administrator' or\
-            user.status == 'creator':               #TODO
+            user.status == 'creator':
         try:
             bot.delete_messages(chat_id=callbackquery.message.chat.id,
                                 message_ids=callbackquery.message.message_id)
@@ -98,3 +140,12 @@ def delete_callback(bot, callbackquery):
 
 delete_handler = CallbackQueryHandler(filters=Filters.callback_data,
                                       callback=delete_callback)
+
+
+def delete_message(bot, message):
+    try:
+        bot.delete_messages(chat_id=message.chat.id,
+                            message_ids=message.message_id)
+    except Exception as e:
+        print(e)
+        pass

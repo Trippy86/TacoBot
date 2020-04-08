@@ -74,3 +74,7 @@ silenced_mode_on_phrase = '<b>Silenced mode has been turned ON.</b>'
 
 silenced_mode_off_phrase = '<b>Silenced mode has been turned OFF.</b>'
 
+autohide_on_phrase = '<b>AutoHide mode has been turned ON.</b>'
+
+autohide_off_phrase = '<b>AutoHide mode has been turned OFF.</b>'
+

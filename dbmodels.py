@@ -1,4 +1,4 @@
-from peewee import *
+import peeweedbevolve
 from playhouse.db_url import connect
 from playhouse.sqlite_ext import *
 from decouple import config
@@ -13,8 +13,10 @@ class Chats(Model):                                                        # cha
     cid = BigIntegerField()
     invited_by = BigIntegerField()
     less = BooleanField(default=False)
+    autohide = BooleanField(default=False)
+    autohide_delay = IntegerField(default=15)
     mids = JSONField(null=True,
-                     default=[])                                             #TODO
+                     default=[])
 
     class Meta:
         database = db
@@ -48,3 +50,5 @@ class Usernames(Model):                                                       # 
 
 if not Usernames.table_exists():                                                     # creating usernames if not present
     db.create_tables([Usernames])
+
+db.evolve()

@@ -2,6 +2,9 @@ import re
 from decouple import config
 from pyrogram import Filters, MessageHandler, InlineKeyboardMarkup, InlineKeyboardButton
 from dbmodels import Tacos, Chats
+import datetime
+from scheduler import sched
+from .basic import delete_message
 from filters import filter_taco, filter_mention
 from phrases import (
     taco_transfer_phrase,
@@ -26,7 +29,6 @@ def give_tacos(bot, message, sender, receiver):
     tacos = Tacos.get(Tacos.chat == cid)
 
     chat = Chats.get(Chats.cid == message.chat.id)
-    clean_chat(chat.mids, chat.cid, bot, message)
 
     ok_button = InlineKeyboardButton('OK', callback_data='delete:{}'.format(message.from_user.id))
     ok_keyboard = InlineKeyboardMarkup([[ok_button]])
@@ -34,7 +36,7 @@ def give_tacos(bot, message, sender, receiver):
     sender_name = store_name(sender)
     receiver_name = store_name(receiver)
 
-    if receiver.is_bot:  # no tacos for bots
+    if receiver.is_bot:
         if chat.less is True:
             text = no_bots_allowed_phrase.split('\n')[0]
         else:
@@ -52,15 +54,15 @@ def give_tacos(bot, message, sender, receiver):
     sender_id = str(sender.id)
     receiver_id = str(receiver.id)
 
-    if sender_id == receiver_id:  # self-tacoing is forbidden
+    if sender_id == receiver_id:
         if chat.less is True:
             text = self_tacoing_phrase.split('\n')[0]
         else:
             text = self_tacoing_phrase
         mid = bot.send_message(chat_id=cid,
-                         text=text,
-                         reply_to_message_id=get_mid(message),
-                         parse_mode='html').message_id
+                               text=text,
+                               reply_to_message_id=get_mid(message),
+                               parse_mode='html').message_id
 
         chat.mids = [mid]
         chat.save()
@@ -70,7 +72,13 @@ def give_tacos(bot, message, sender, receiver):
         re.findall(taco_emoji, message.text)
     )
 
-    if tacos.taco_balance is None:  # initialising/restoring user-balances
+    txt = message.text.replace(taco_emoji, '')
+    if message.entities is not None:
+        for entity in message.entities:
+            txt = txt[:entity.offset] + txt[entity.offset + entity.length:]
+    user_comment = txt.lstrip(' ')
+
+    if tacos.taco_balance is None:
         amounts = dict()
         amounts.update({sender_id: default_taco_amount})
         amounts.update({receiver_id: default_taco_amount})
@@ -81,17 +89,29 @@ def give_tacos(bot, message, sender, receiver):
         if receiver_id not in amounts.keys():
             amounts.update({receiver_id: default_taco_amount})
 
-    if tacos_sent > amounts.get(sender_id):  # can't send more than you have
+    if tacos_sent > amounts.get(sender_id):
         if chat.less is True:
             text = balance_low_phrase.split('\n')[0]
         else:
             text = balance_low_phrase
-        mid = bot.send_message(chat_id=cid,
-                         text=text,
-                         reply_to_message_id=get_mid(message),
-                         parse_mode='html').message_id
+        if chat.autohide:
+            msg = bot.send_message(chat_id=cid,
+                                   text=text,
+                                   reply_to_message_id=get_mid(message),
+                                   parse_mode='html')
 
-        chat.mids = [mid]
+            time = datetime.datetime.now() + datetime.timedelta(minutes=chat.autohide_delay)
+
+            sched.add_job(delete_message, 'date', run_date=time, args=[bot, msg])
+
+        else:
+            msg = bot.send_message(chat_id=cid,
+                                   text=text,
+                                   reply_to_message_id=get_mid(message),
+                                   reply_markup=ok_keyboard,
+                                   parse_mode='html')
+
+        chat.mids = [msg.message_id]
         chat.save()
         return
 
@@ -110,7 +130,7 @@ def give_tacos(bot, message, sender, receiver):
         else:
             comment = taco_transfer_comment_medium.format(receiver_name)
 
-    if "@" in sender_name:                      #TODO
+    if "@" in sender_name:
         sender_link = "https://t.me/{}".format(sender_name[1:])
     else:
         sender_link = "tg://user?id={}".format(sender_id)
@@ -120,27 +140,46 @@ def give_tacos(bot, message, sender, receiver):
     else:
         receiver_link = "tg://user?id={}".format(receiver_id)
 
-    if tacos_sent == 1:                         #TODO
+    if tacos_sent == 1:
         phrase = taco_transfer_phrase.replace('tacos', 'taco')
     else:
         phrase = taco_transfer_phrase
 
-    mid = bot.send_message(chat_id=cid,
-                     text=phrase.format(sender_link,
-                                                      sender_name,
-                                                      tacos_sent,
-                                                      receiver_link,
-                                                      receiver_name,
-                                                      comment),
-                     reply_markup=ok_keyboard,
-                     reply_to_message_id=get_mid(message),
-                     parse_mode='html',
-                     disable_web_page_preview=True).message_id
+    if len(user_comment) > 0:
+        phrase += '<b>And said:</b>\n>>><code>{}</code>'.format(user_comment)
 
-    chat.mids = [mid]
+    if chat.autohide:
+        msg = bot.send_message(chat_id=cid,
+                               text=phrase.format(sender_link,
+                                                  sender_name,
+                                                  tacos_sent,
+                                                  receiver_link,
+                                                  receiver_name,
+                                                  comment),
+                               parse_mode='html',
+                               disable_web_page_preview=True)
+
+        time = datetime.datetime.now() + datetime.timedelta(minutes=chat.autohide_delay)
+
+        sched.add_job(delete_message, 'date', run_date=time, args=[bot, msg])
+
+    else:
+
+        msg = bot.send_message(chat_id=cid,
+                               text=phrase.format(sender_link,
+                                                  sender_name,
+                                                  tacos_sent,
+                                                  receiver_link,
+                                                  receiver_name,
+                                                  comment),
+                               reply_markup=ok_keyboard,
+                               parse_mode='html',
+                               disable_web_page_preview=True)
+
+    chat.mids = [msg.message_id]
     chat.save()
 
-    tacos.taco_balance = amounts  # saving data
+    tacos.taco_balance = amounts
     tacos.save()
 
 
@@ -151,7 +190,7 @@ def chat_reply_callback(bot, message):
     store_name(receiver := message.reply_to_message.from_user)
 
     chat = Chats.get(Chats.cid == message.chat.id)
-    clean_chat(chat.mids, chat.cid, bot, None)                  #TODO
+    clean_chat(chat.mids, chat.cid, bot, None)
 
     give_tacos(bot, message, sender, receiver)
 
@@ -168,7 +207,7 @@ def taco_mention_callback(bot, message):
     store_name(message.from_user)
 
     chat = Chats.get(Chats.cid == message.chat.id)
-    clean_chat(chat.mids, chat.cid, bot, None)              #TODO
+    clean_chat(chat.mids, chat.cid, bot, None)
 
     ok_button = InlineKeyboardButton('OK', callback_data='delete:{}'.format(message.from_user.id))
     ok_keyboard = InlineKeyboardMarkup([[ok_button]])
@@ -178,7 +217,7 @@ def taco_mention_callback(bot, message):
         if entity.type == 'mention':
             user = message.text[entity.offset: entity.offset + entity.length].lower()
             mentioned_users.append(user)
-    mentioned_users = list(set(mentioned_users))   # removing duplicates
+    mentioned_users = list(set(mentioned_users))
 
     if len(mentioned_users) > 1:
         if chat.less is True:
@@ -186,10 +225,10 @@ def taco_mention_callback(bot, message):
         else:
             text = only_one_receiver_phrase
         mid = bot.send_message(chat_id=cid,
-                         text=text,
-                         reply_to_message_id=get_mid(message),
+                               text=text,
+                               reply_to_message_id=get_mid(message),
                                reply_markup=ok_keyboard,
-                         parse_mode='html').message_id
+                               parse_mode='html').message_id
 
         chat.mids = [mid]
         chat.save()
@@ -209,10 +248,10 @@ def taco_mention_callback(bot, message):
         else:
             text = user_not_present_phrase
         mid = bot.send_message(chat_id=cid,
-                         text=text.format(ensure_username(receiver_username)),
-                         reply_to_message_id=get_mid(message),
+                               text=text.format(ensure_username(receiver_username)),
+                               reply_to_message_id=get_mid(message),
                                reply_markup=ok_keyboard,
-                         parse_mode='html').message_id
+                               parse_mode='html').message_id
 
         chat.mids = [mid]
         chat.save()
@@ -235,6 +274,6 @@ def tacoinflator():
         chat = chat.get()
         tacos = chat.taco_balance
         for user in tacos:
-            tacos.update({user: tacos.get(user) + default_taco_inflation_amount})  #TODO
+            tacos.update({user: tacos.get(user) + default_taco_inflation_amount})
         chat.taco_balance = tacos
         chat.save()
