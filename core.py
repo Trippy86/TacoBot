@@ -3,7 +3,7 @@ import logging
 from chattools import ensure_no_at_sign
 from decouple import config
 from handlers.basic import help_handler, start_handler, store_names_handler, less_handler, delete_handler,\
-    autohide_handler
+    autohide_handler, autohide_delay_handler
 from handlers.leaderboards import taco_top_handler, my_tacos_handler
 from handlers.setup import self_kick_handler, new_chat_handler
 from handlers.tacotransfers import chat_reply_handler, taco_mention_handler, tacoinflator
@@ -40,6 +40,7 @@ if __name__ == '__main__':
     bot.add_handler(less_handler)
     bot.add_handler(taco_mention_handler)
     bot.add_handler(delete_handler)
+    bot.add_handler(autohide_delay_handler)
     bot.add_handler(autohide_handler)
 
     sched.start()

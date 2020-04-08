@@ -78,3 +78,8 @@ autohide_on_phrase = '<b>AutoHide mode has been turned ON.</b>'
 
 autohide_off_phrase = '<b>AutoHide mode has been turned OFF.</b>'
 
+autohide_delay_set_phrase = '<b>AutoHide delay has been set to {} minutes.</b>'
+
+autohide_delay_wrong_value_phrase = '<b>I can only accept values between 1 and 120 minutes as AutoHide delay.</b>\n' \
+                                    'Please, correct your query and try again.'
+

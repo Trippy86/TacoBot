@@ -1,6 +1,7 @@
 from pyrogram import MessageHandler, Filters
 from phrases import start_phrase, help_phrase, delete_message_fail_phrase, admins_only_phrase,\
-    silenced_mode_off_phrase, silenced_mode_on_phrase, autohide_on_phrase, autohide_off_phrase
+    silenced_mode_off_phrase, silenced_mode_on_phrase, autohide_on_phrase, autohide_off_phrase,\
+    autohide_delay_set_phrase, autohide_delay_wrong_value_phrase
 from dbmodels import Chats
 from pyrogram import CallbackQueryHandler
 from chattools import get_uid, store_name, clean_chat
@@ -116,7 +117,66 @@ def autohide_callback(bot, message):
 
 
 autohide_handler = MessageHandler(callback=autohide_callback,
-                                  filters=Filters.command('autohide') & Filters.group)
+                                  filters=Filters.command('autohide_mode') & Filters.group)
+
+
+def autohide_delay_callback(bot, message):
+    chat = Chats.get(Chats.cid == message.chat.id)
+
+    clean_chat(chat.mids, chat.cid, bot, message)
+
+    user = bot.get_chat_member(chat_id=message.chat.id,
+                               user_id=message.from_user.id)
+
+    if message.from_user.id == chat.invited_by or\
+            user.status == 'administrator' or\
+            user.status == 'creator':
+
+        if (args := len(message.command)) == 1:
+            delay = 15
+        elif args > 2:
+            bot.send_message(chat_id=chat.cid,
+                             text=autohide_delay_wrong_value_phrase,
+                             parse_mode='html')
+            return
+        else:
+            try:
+                delay = int(message.command[1])
+            except ValueError:
+                bot.send_message(chat_id=chat.cid,
+                                 text=autohide_delay_wrong_value_phrase,
+                                 parse_mode='html')
+                return
+
+        if delay < 1 or delay > 120:
+            bot.send_message(chat_id=chat.cid,
+                             text=autohide_delay_wrong_value_phrase,
+                             parse_mode='html')
+            return
+
+        chat.autohide_delay = delay
+
+        mid = bot.send_message(chat_id=chat.cid,
+                               text=autohide_delay_set_phrase.format(delay),
+                               parse_mode='html').message_id
+
+        chat.mids = json.dumps([mid])
+        chat.save()
+
+    else:
+        text = admins_only_phrase
+
+        mid = bot.send_message(chat_id=chat.cid,
+                               text=text,
+                               parse_mode='html').message_id
+
+        chat.mids = json.dumps([mid])
+        chat.save()
+    pass
+
+
+autohide_delay_handler = MessageHandler(callback=autohide_delay_callback,
+                                        filters=Filters.command('autohide_delay') & Filters.group)
 
 
 def delete_callback(bot, callbackquery):
