@@ -72,10 +72,11 @@ def give_tacos(bot, message, sender, receiver):
         re.findall(taco_emoji, message.text)
     )
 
-    txt = message.text.replace(taco_emoji, '')
+    txt = message.text
     if message.entities is not None:
         for entity in message.entities:
             txt = txt[:entity.offset] + txt[entity.offset + entity.length:]
+    txt = txt.replace(taco_emoji, '')
     user_comment = txt.lstrip(' ')
 
     if tacos.taco_balance is None:
