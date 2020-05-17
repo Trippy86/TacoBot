@@ -1,6 +1,6 @@
 from decouple import config
 from pyrogram import MessageHandler, Filters, InlineKeyboardButton, InlineKeyboardMarkup
-from dbmodels import Tacos, Chats
+from dbmodels import Tacos, Chats, db
 from phrases import balance_phrase, balance_comment_medium, balance_comment_high, balance_comment_low,\
     taco_top_phrase, empty_top_phrase
 from chattools import get_uid, store_name, get_cid, resolve_name, get_mid, clean_chat, ensure_no_at_sign
@@ -17,16 +17,16 @@ def my_tacos_callback(bot, message):
     """ shows users taco-balance """
 
     cid = get_cid(message)
-    chat = Chats.get(Chats.cid == message.chat.id)
+    uid = str(get_uid(message))
+
+    with db:
+        chat = Chats.get(Chats.cid == message.chat.id)
+        tacos = Tacos.get(Tacos.chat == cid)
+        balances = tacos.taco_balance
 
     delete_message(bot, message)
 
     user_name = store_name(message.from_user)
-
-    uid = str(get_uid(message))
-    tacos = Tacos.get(Tacos.chat == cid)
-
-    balances = tacos.taco_balance
 
     if uid in balances.keys():
         balance = balances.get(uid)

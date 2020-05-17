@@ -13,11 +13,15 @@ def new_chat_callback(bot, message):
 
     invited_by = message.from_user
 
-    Chats.create(cid=cid,
-                 invited_by=invited_by.id)
+    Chats.create(
+        id=len(Chats.select()) + 1000,
+        cid=cid,
+        invited_by=invited_by.id)
 
-    Tacos.create(chat=cid)
-                                                        # TODO
+    Tacos.create(
+        id=len(Tacos.select()) + 1000,
+        chat=cid)
+
     bot.send_message(cid,
                      chat_enabled_phrase,
                      parse_mode='html')

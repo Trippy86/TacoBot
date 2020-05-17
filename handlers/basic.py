@@ -2,7 +2,7 @@ from pyrogram import MessageHandler, Filters
 from phrases import start_phrase, help_phrase, delete_message_fail_phrase, admins_only_phrase,\
     silenced_mode_off_phrase, silenced_mode_on_phrase, autohide_on_phrase, autohide_off_phrase,\
     autohide_delay_set_phrase, autohide_delay_wrong_value_phrase
-from dbmodels import Chats
+from dbmodels import Chats, db
 from pyrogram import CallbackQueryHandler
 from chattools import get_uid, store_name, clean_chat
 import json
@@ -44,7 +44,9 @@ store_names_handler = MessageHandler(callback=store_names_callback)
 
 
 def less_callback(bot, message):
-    chat = Chats.get(Chats.cid == message.chat.id)
+    with db:
+        chat = Chats.get(Chats.cid == message.chat.id)
+
     clean_chat(chat.mids, chat.cid, bot, message)
 
     user = bot.get_chat_member(chat_id=message.chat.id,
@@ -63,15 +65,17 @@ def less_callback(bot, message):
                                text=text,
                                parse_mode='html').message_id
         chat.mids = json.dumps([mid])
-        chat.save()
+        with db:
+            chat.save()
     else:
         text = admins_only_phrase
         mid = bot.send_message(chat_id=chat.cid,
                                text=text,
                                parse_mode='html').message_id
         chat.mids = json.dumps([mid])
-        chat.save()
-    pass
+        with db:
+            chat.save()
+
 
 
 less_handler = MessageHandler(callback=less_callback,
@@ -79,7 +83,8 @@ less_handler = MessageHandler(callback=less_callback,
 
 
 def autohide_callback(bot, message):
-    chat = Chats.get(Chats.cid == message.chat.id)
+    with db:
+        chat = Chats.get(Chats.cid == message.chat.id)
     clean_chat(chat.mids, chat.cid, bot, message)
 
     user = bot.get_chat_member(chat_id=message.chat.id,
@@ -102,7 +107,8 @@ def autohide_callback(bot, message):
                                parse_mode='html').message_id
 
         chat.mids = json.dumps([mid])
-        chat.save()
+        with db:
+            chat.save()
 
     else:
         text = admins_only_phrase
@@ -112,8 +118,8 @@ def autohide_callback(bot, message):
                                parse_mode='html').message_id
 
         chat.mids = json.dumps([mid])
-        chat.save()
-    pass
+        with db:
+            chat.save()
 
 
 autohide_handler = MessageHandler(callback=autohide_callback,
@@ -121,7 +127,8 @@ autohide_handler = MessageHandler(callback=autohide_callback,
 
 
 def autohide_delay_callback(bot, message):
-    chat = Chats.get(Chats.cid == message.chat.id)
+    with db:
+        chat = Chats.get(Chats.cid == message.chat.id)
 
     clean_chat(chat.mids, chat.cid, bot, message)
 
@@ -161,7 +168,8 @@ def autohide_delay_callback(bot, message):
                                parse_mode='html').message_id
 
         chat.mids = json.dumps([mid])
-        chat.save()
+        with db:
+            chat.save()
 
     else:
         text = admins_only_phrase
@@ -171,8 +179,8 @@ def autohide_delay_callback(bot, message):
                                parse_mode='html').message_id
 
         chat.mids = json.dumps([mid])
-        chat.save()
-    pass
+        with db:
+            chat.save()
 
 
 autohide_delay_handler = MessageHandler(callback=autohide_delay_callback,

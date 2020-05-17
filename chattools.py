@@ -1,4 +1,4 @@
-from dbmodels import Usernames
+from dbmodels import Usernames, db
 
 
 def get_uid(message):
@@ -21,41 +21,44 @@ def store_name(user_data):
 
     uid = user_data.id
 
-    user = Usernames.select().where(Usernames.uid == uid)
+    with db:
+        user = Usernames.select().where(Usernames.uid == uid)
 
-    if user_data.username is None:
-        username = None
-        first_name = user_data.first_name
-        last_name = user_data.last_name
-        if last_name is None:
-            name = first_name
+        if user_data.username is None:
+            username = None
+            first_name = user_data.first_name
+            last_name = user_data.last_name
+            if last_name is None:
+                name = first_name
+            else:
+                name = first_name + ' ' + last_name
         else:
-            name = first_name + ' ' + last_name
-    else:
-        name = '@' + user_data.username
-        username = user_data.username.lower()
+            name = '@' + user_data.username
+            username = user_data.username.lower()
 
-    if user.exists():
-        user = user.get()
-        user.name = name
-        user.username = username
-        user.save()
+        if user.exists():
+            user = user.get()
+            user.name = name
+            user.username = username
+            user.save()
 
-    else:
-        Usernames.create(
-            uid=uid,
-            name=name,
-            username=username)
+        else:
+            Usernames.create(
+                id=len(Usernames.select()) + 5000,
+                uid=uid,
+                name=name,
+                username=username)
 
-    return name
+        return name
 
 
 def resolve_name(uid):                                                               # returns username if present in DB
-    user = Usernames.select().where(Usernames.uid == uid)
-    if user.exists():
-        return user.get().name
-    else:
-        return uid
+    with db:
+        user = Usernames.select().where(Usernames.uid == uid)
+        if user.exists():
+            return user.get().name
+        else:
+            return uid
 
 
 def ensure_username(name: str):

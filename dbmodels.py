@@ -1,4 +1,3 @@
-import peeweedbevolve
 from playhouse.db_url import connect
 from playhouse.sqlite_ext import *
 from decouple import config
@@ -50,5 +49,3 @@ class Usernames(Model):                                                       # 
 
 if not Usernames.table_exists():                                                     # creating usernames if not present
     db.create_tables([Usernames])
-
-db.evolve()
